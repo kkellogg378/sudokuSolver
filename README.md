@@ -1,2 +1,2 @@
 # sudokuSolver
-Automatic Sudoku Solver
+Automatic Sudoku solver written entirely in C. Requires being able to import <windows.h>
