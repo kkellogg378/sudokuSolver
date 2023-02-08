@@ -117,6 +117,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     LPSTR lpCmdLine, int nCmdShow)
 {
+	BOOL bRet;
     WNDCLASSEX wc;
     HWND hwnd;
     MSG Msg;
@@ -162,11 +163,24 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     UpdateWindow(hwnd);												//
 
     // Step 3: The Message Loop
-    while(GetMessage(&Msg, NULL, 0, 0) > 0)
-    {
+    /*while(GetMessage(&Msg, NULL, 0, 0) > 0)			//old message loop
+	{
         TranslateMessage(&Msg);
         DispatchMessage(&Msg);
-    }
+    }*/
+	
+	while( (bRet = GetMessage( &Msg, NULL, 0, 0 )) != 0)
+    { 
+        if (bRet == -1)
+        {
+            // handle the error and possibly exit
+        }
+        else
+        {
+            TranslateMessage(&Msg); 
+            DispatchMessage(&Msg); 
+        }
+    } 
 	
     return Msg.wParam;
 }
@@ -184,7 +198,7 @@ int sudoku(int grid[9][9], int *p)
 		}
 	}
 	
-	int i = 0, j = 0, nosolution = 0;
+	int i = 0, j = 0, no_solution = 0;
 	while (i < 9) {
 		if (j == 9) {									//check to make sure we stay in possible spots
 			j = 0;
@@ -196,6 +210,14 @@ int sudoku(int grid[9][9], int *p)
 				j = 0;
 				i = i + 1;
 			}
+			if (i == 9) {
+				//no_solution = 1;
+				break;
+			}
+		}
+		if (i == 9) {
+			//no_solution = 1;
+			break;
 		}
 		grid[i][j] = grid[i][j] + 1;					//increases value of the current slot by 1
 		if (grid[i][j] > 9) {							//if no possible value
@@ -205,9 +227,9 @@ int sudoku(int grid[9][9], int *p)
 				j = 8;
 				i = i - 1;
 				if (i < 0)								//determines there is no solution if the first unlocked slot has no possible value
-					nosolution = 1;
+					no_solution = 1;
 			}
-			if (nosolution == 1)//addednew
+			if (no_solution == 1)//addednew
 				break;
 			while (isLocked[i][j] == 1) {				//moves the current location to the previous unlocked slot
 				j = j - 1;
@@ -215,217 +237,236 @@ int sudoku(int grid[9][9], int *p)
 					j = 8;
 					i = i - 1;
 					if (i < 0) {
-						nosolution = 1;
+						no_solution = 1;
 						break;
 					}
 				}
 			}
-			if (nosolution == 1)						//checks if its been determined that there is no solution
+			if (no_solution == 1)						//checks if its been determined that there is no solution
 				break;
 			else
 				continue;								//resets to beginning of loop
 		}
 		
-		if (nosolution == 1)//addednew
-			break;
+		int valid = isValid(grid, i, j);
 		
-		if (isValid(grid, i, j)) {						//if the new value for the location is a possible one, checks that value to see if it is valid
+		if (no_solution == 1)//addednew
+			break;
+		else if (valid == 1) {						//if the new value for the location is a possible one, checks that value to see if it is valid
 			j = j + 1;									//moves location to next slot if the number is valid
 			if (j == 9) {
 				j = 0;
 				i = i + 1;
+			}
+			if (i == 9) {
+				//no_solution = 1;
+				break;
 			}
 			continue;
 		}
 		else
 			continue;									//does not move the location because the number is not valid
 	}
+	
+	if (no_solution != 0) {
+		for (int i = 0; i < 9; i++) {
+			for (int j = 0; j < 9; j++) {//attempt to reset the grid if there is no solution
+				grid[i][j] = 0;
+			}
+		}
+	}
+	
+	*p = no_solution;
+	
 	return 0;
 }
 
 int isValid (int grid[9][9], int i, int j) {		//returns 1 if valid and 0 if not (Most likely fully functional)
 	
 	int row = 0, column = 0, box = 0;
-	
-	if (i == 0){
-		if (grid[i][j] == grid[1][j] || grid[i][j] == grid[2][j] || grid[i][j] == grid[3][j] || grid[i][j] == grid[4][j] || grid[i][j] == grid[5][j] || grid[i][j] == grid[6][j] || grid[i][j] == grid[7][j] || grid[i][j] == grid[8][j])
-			column = column + 1;
-		else;
-	}
-	else if (i == 1) {
-		if (grid[i][j] == grid[0][j] || grid[i][j] == grid[2][j] || grid[i][j] == grid[3][j] || grid[i][j] == grid[4][j] || grid[i][j] == grid[5][j] || grid[i][j] == grid[6][j] || grid[i][j] == grid[7][j] || grid[i][j] == grid[8][j])
-			column = column + 1;
-		else;
-	}
-	else if (i == 2) {
-		if (grid[i][j] == grid[0][j] || grid[i][j] == grid[1][j] || grid[i][j] == grid[3][j] || grid[i][j] == grid[4][j] || grid[i][j] == grid[5][j] || grid[i][j] == grid[6][j] || grid[i][j] == grid[7][j] || grid[i][j] == grid[8][j])
-			column = column + 1;
-		else;
-	}
-	else if (i == 3) {
-		if (grid[i][j] == grid[0][j] || grid[i][j] == grid[1][j] || grid[i][j] == grid[2][j] || grid[i][j] == grid[4][j] || grid[i][j] == grid[5][j] || grid[i][j] == grid[6][j] || grid[i][j] == grid[7][j] || grid[i][j] == grid[8][j])
-			column = column + 1;
-		else;
-	}
-	else if (i == 4) {
-		if (grid[i][j] == grid[0][j] || grid[i][j] == grid[1][j] || grid[i][j] == grid[2][j] || grid[i][j] == grid[3][j] || grid[i][j] == grid[5][j] || grid[i][j] == grid[6][j] || grid[i][j] == grid[7][j] || grid[i][j] == grid[8][j])
-			column = column + 1;
-		else;
-	}
-	else if (i == 5) {
-		if (grid[i][j] == grid[0][j] || grid[i][j] == grid[1][j] || grid[i][j] == grid[2][j] || grid[i][j] == grid[3][j] || grid[i][j] == grid[4][j] || grid[i][j] == grid[6][j] || grid[i][j] == grid[7][j] || grid[i][j] == grid[8][j])
-			column = column + 1;
-		else;
-	}
-	else if (i == 6) {
-		if (grid[i][j] == grid[0][j] || grid[i][j] == grid[1][j] || grid[i][j] == grid[2][j] || grid[i][j] == grid[3][j] || grid[i][j] == grid[4][j] || grid[i][j] == grid[5][j] || grid[i][j] == grid[7][j] || grid[i][j] == grid[8][j])
-			column = column + 1;
-		else;
-	}
-	else if (i == 7) {
-		if (grid[i][j] == grid[0][j] || grid[i][j] == grid[1][j] || grid[i][j] == grid[2][j] || grid[i][j] == grid[3][j] || grid[i][j] == grid[4][j] || grid[i][j] == grid[5][j] || grid[i][j] == grid[6][j] || grid[i][j] == grid[8][j])
-			column = column + 1;
-		else;
-	}
-	else if (i == 8) {
-		if (grid[i][j] == grid[0][j] || grid[i][j] == grid[1][j] || grid[i][j] == grid[2][j] || grid[i][j] == grid[3][j] || grid[i][j] == grid[4][j] || grid[i][j] == grid[5][j] || grid[i][j] == grid[6][j] || grid[i][j] == grid[7][j])
-			column = column + 1;
-		else;
-	}
-	else;
-	
-	if (j == 0) {
-		if (grid[i][j] == grid[i][1] || grid[i][j] == grid[i][2] || grid[i][j] == grid[i][3] || grid[i][j] == grid[i][4] || grid[i][j] == grid[i][5] || grid[i][j] == grid[i][6] || grid[i][j] == grid[i][7] || grid[i][j] == grid[i][8])
-			row = row + 1;
-		else;
-	}
-	else if (j == 1) {
-		if (grid[i][j] == grid[i][0] || grid[i][j] == grid[i][2] || grid[i][j] == grid[i][3] || grid[i][j] == grid[i][4] || grid[i][j] == grid[i][5] || grid[i][j] == grid[i][6] || grid[i][j] == grid[i][7] || grid[i][j] == grid[i][8])
-			row = row + 1;
-		else;
-	}
-	else if (j == 2) {
-		if (grid[i][j] == grid[i][0] || grid[i][j] == grid[i][1] || grid[i][j] == grid[i][3] || grid[i][j] == grid[i][4] || grid[i][j] == grid[i][5] || grid[i][j] == grid[i][6] || grid[i][j] == grid[i][7] || grid[i][j] == grid[i][8])
-			row = row + 1;
-		else;
-	}
-	else if (j == 3) {
-		if (grid[i][j] == grid[i][0] || grid[i][j] == grid[i][1] || grid[i][j] == grid[i][2] || grid[i][j] == grid[i][4] || grid[i][j] == grid[i][5] || grid[i][j] == grid[i][6] || grid[i][j] == grid[i][7] || grid[i][j] == grid[i][8])
-			row = row + 1;
-		else;
-	}
-	else if (j == 4) {
-		if (grid[i][j] == grid[i][0] || grid[i][j] == grid[i][1] || grid[i][j] == grid[i][2] || grid[i][j] == grid[i][3] || grid[i][j] == grid[i][5] || grid[i][j] == grid[i][6] || grid[i][j] == grid[i][7] || grid[i][j] == grid[i][8])
-			row = row + 1;
-		else;
-	}
-	else if (j == 5) {
-		if (grid[i][j] == grid[i][0] || grid[i][j] == grid[i][1] || grid[i][j] == grid[i][2] || grid[i][j] == grid[i][3] || grid[i][j] == grid[i][4] || grid[i][j] == grid[i][6] || grid[i][j] == grid[i][7] || grid[i][j] == grid[i][8])
-			row = row + 1;
-		else;
-	}
-	else if (j == 6) {
-		if (grid[i][j] == grid[i][0] || grid[i][j] == grid[i][1] || grid[i][j] == grid[i][2] || grid[i][j] == grid[i][3] || grid[i][j] == grid[i][4] || grid[i][j] == grid[i][5] || grid[i][j] == grid[i][7] || grid[i][j] == grid[i][8])
-			row = row + 1;
-		else;
-	}
-	else if (j == 7) {
-		if (grid[i][j] == grid[i][0] || grid[i][j] == grid[i][1] || grid[i][j] == grid[i][2] || grid[i][j] == grid[i][3] || grid[i][j] == grid[i][4] || grid[i][j] == grid[i][5] || grid[i][j] == grid[i][6] || grid[i][j] == grid[i][8])
-			row = row + 1;
-		else;
-	}
-	else if (j == 8) {
-		if (grid[i][j] == grid[i][0] || grid[i][j] == grid[i][1] || grid[i][j] == grid[i][2] || grid[i][j] == grid[i][3] || grid[i][j] == grid[i][4] || grid[i][j] == grid[i][5] || grid[i][j] == grid[i][6] || grid[i][j] == grid[i][7])
-			row = row + 1;
-		else;
-	}
-	else;
-	
-	int addi = 0, addj = 0;
-	
-	if (i <= 2) {			// Program used to determine how to tweak checking function
-		addi = 0;
-		if (j <= 2)			// BOX 1
-			addj = 0;
-		else if (j <= 5)	// BOX 2
-			addj = 3;
-		else if (j <= 8)	// BOX 3
-			addj = 6;
-		else;
-	}
-	else if (i <= 5) {
-		addi = 3;
-		if (j <= 2)			// BOX 4
-			addj = 0;
-		else if (j <= 5)	// BOX 5
-			addj = 3;
-		else if (j <= 8)	// BOX 6
-			addj = 6;
-		else;
-	}
-	else if (i <= 8) {
-		addi = 6;
-		if (j <= 2)			// BOX 7
-			addj = 0;
-		else if (j <= 5)	// BOX 8
-			addj = 3;
-		else if (j <= 8)	// BOX 9
-			addj = 6;
-		else;
-	}
-	else;
-	
-	if (i == (addi + 0) && j == (addj + 0)) {
-		if (grid[i][j] == grid[(addi + 0)][(addj + 1)] || grid[i][j] == grid[(addi + 0)][(addj + 2)] || grid[i][j] == grid[(addi + 1)][(addj + 0)] || grid[i][j] == grid[(addi + 1)][(addj + 1)] || grid[i][j] == grid[(addi + 1)][(addj + 2)] || grid[i][j] == grid[(addi + 2)][(addj + 0)] || grid[i][j] == grid[(addi + 2)][(addj + 1)] || grid[i][j] == grid[(addi + 2)][(addj + 2)]) 
-			box = box + 1;
-		else;
-	}
-	else if (i == (addi + 0) && j == (addj + 1)) {
-		if (grid[i][j] == grid[(addi + 0)][(addj + 0)] || grid[i][j] == grid[(addi + 0)][(addj + 2)] || grid[i][j] == grid[(addi + 1)][(addj + 0)] || grid[i][j] == grid[(addi + 1)][(addj + 1)] || grid[i][j] == grid[(addi + 1)][(addj + 2)] || grid[i][j] == grid[(addi + 2)][(addj + 0)] || grid[i][j] == grid[(addi + 2)][(addj + 1)] || grid[i][j] == grid[(addi + 2)][(addj + 2)]) 
-			box = box + 1;
-		else;
-	}
-	else if (i == (addi + 0) && j == (addj + 2)) {
-		if (grid[i][j] == grid[(addi + 0)][(addj + 0)] || grid[i][j] == grid[(addi + 0)][(addj + 1)] || grid[i][j] == grid[(addi + 1)][(addj + 0)] || grid[i][j] == grid[(addi + 1)][(addj + 1)] || grid[i][j] == grid[(addi + 1)][(addj + 2)] || grid[i][j] == grid[(addi + 2)][(addj + 0)] || grid[i][j] == grid[(addi + 2)][(addj + 1)] || grid[i][j] == grid[(addi + 2)][(addj + 2)]) 
-			box = box + 1;
-		else;
-	}
-	else if (i == (addi + 1) && j == (addj + 0)) {
-		if (grid[i][j] == grid[(addi + 0)][(addj + 0)] || grid[i][j] == grid[(addi + 0)][(addj + 1)] || grid[i][j] == grid[(addi + 0)][(addj + 2)] || grid[i][j] == grid[(addi + 1)][(addj + 1)] || grid[i][j] == grid[(addi + 1)][(addj + 2)] || grid[i][j] == grid[(addi + 2)][(addj + 0)] || grid[i][j] == grid[(addi + 2)][(addj + 1)] || grid[i][j] == grid[(addi + 2)][(addj + 2)]) 
-			box = box + 1;
-		else;
-	}
-	else if (i == (addi + 1) && j == (addj + 1)) {
-		if (grid[i][j] == grid[(addi + 0)][(addj + 0)] || grid[i][j] == grid[(addi + 0)][(addj + 1)] || grid[i][j] == grid[(addi + 0)][(addj + 2)] || grid[i][j] == grid[(addi + 1)][(addj + 0)] || grid[i][j] == grid[(addi + 1)][(addj + 2)] || grid[i][j] == grid[(addi + 2)][(addj + 0)] || grid[i][j] == grid[(addi + 2)][(addj + 1)] || grid[i][j] == grid[(addi + 2)][(addj + 2)]) 
-			box = box + 1;
-		else;
-	}
-	else if (i == (addi + 1) && j == (addj + 2)) {
-		if (grid[i][j] == grid[(addi + 0)][(addj + 0)] || grid[i][j] == grid[(addi + 0)][(addj + 1)] || grid[i][j] == grid[(addi + 0)][(addj + 2)] || grid[i][j] == grid[(addi + 1)][(addj + 0)] || grid[i][j] == grid[(addi + 1)][(addj + 1)] || grid[i][j] == grid[(addi + 2)][(addj + 0)] || grid[i][j] == grid[(addi + 2)][(addj + 1)] || grid[i][j] == grid[(addi + 2)][(addj + 2)]) 
-			box = box + 1;
-		else;
-	}
-	else if (i == (addi + 2) && j == (addj + 0)) {
-		if (grid[i][j] == grid[(addi + 0)][(addj + 0)] || grid[i][j] == grid[(addi + 0)][(addj + 1)] || grid[i][j] == grid[(addi + 0)][(addj + 2)] || grid[i][j] == grid[(addi + 1)][(addj + 0)] || grid[i][j] == grid[(addi + 1)][(addj + 1)] || grid[i][j] == grid[(addi + 1)][(addj + 2)] || grid[i][j] == grid[(addi + 2)][(addj + 1)] || grid[i][j] == grid[(addi + 2)][(addj + 2)]) 
-			box = box + 1;
-		else;
-	}
-	else if (i == (addi + 2) && j == (addj + 1)) {
-		if (grid[i][j] == grid[(addi + 0)][(addj + 0)] || grid[i][j] == grid[(addi + 0)][(addj + 1)] || grid[i][j] == grid[(addi + 0)][(addj + 2)] || grid[i][j] == grid[(addi + 1)][(addj + 0)] || grid[i][j] == grid[(addi + 1)][(addj + 1)] || grid[i][j] == grid[(addi + 1)][(addj + 2)] || grid[i][j] == grid[(addi + 2)][(addj + 0)] || grid[i][j] == grid[(addi + 2)][(addj + 2)]) 
-			box = box + 1;
-		else;
-	}
-	else if (i == (addi + 2) && j == (addj + 2)) {
-		if (grid[i][j] == grid[(addi + 0)][(addj + 0)] || grid[i][j] == grid[(addi + 0)][(addj + 1)] || grid[i][j] == grid[(addi + 0)][(addj + 2)] || grid[i][j] == grid[(addi + 1)][(addj + 0)] || grid[i][j] == grid[(addi + 1)][(addj + 1)] || grid[i][j] == grid[(addi + 1)][(addj + 2)] || grid[i][j] == grid[(addi + 2)][(addj + 0)] || grid[i][j] == grid[(addi + 2)][(addj + 1)]) 
-			box = box + 1;
-		else;
-	}
-	else;
-	
-	if (row == 0 && column == 0 && box == 0)
-		return 1;
-	else
+	if (j > 8 || i > 8)
 		return 0;
+	else {
+		if (i == 0){
+			if (grid[i][j] == grid[1][j] || grid[i][j] == grid[2][j] || grid[i][j] == grid[3][j] || grid[i][j] == grid[4][j] || grid[i][j] == grid[5][j] || grid[i][j] == grid[6][j] || grid[i][j] == grid[7][j] || grid[i][j] == grid[8][j])
+				column = column + 1;
+			else;
+		}
+		else if (i == 1) {
+			if (grid[i][j] == grid[0][j] || grid[i][j] == grid[2][j] || grid[i][j] == grid[3][j] || grid[i][j] == grid[4][j] || grid[i][j] == grid[5][j] || grid[i][j] == grid[6][j] || grid[i][j] == grid[7][j] || grid[i][j] == grid[8][j])
+				column = column + 1;
+			else;
+		}
+		else if (i == 2) {
+			if (grid[i][j] == grid[0][j] || grid[i][j] == grid[1][j] || grid[i][j] == grid[3][j] || grid[i][j] == grid[4][j] || grid[i][j] == grid[5][j] || grid[i][j] == grid[6][j] || grid[i][j] == grid[7][j] || grid[i][j] == grid[8][j])
+				column = column + 1;
+			else;
+		}
+		else if (i == 3) {
+			if (grid[i][j] == grid[0][j] || grid[i][j] == grid[1][j] || grid[i][j] == grid[2][j] || grid[i][j] == grid[4][j] || grid[i][j] == grid[5][j] || grid[i][j] == grid[6][j] || grid[i][j] == grid[7][j] || grid[i][j] == grid[8][j])
+				column = column + 1;
+			else;
+		}
+		else if (i == 4) {
+			if (grid[i][j] == grid[0][j] || grid[i][j] == grid[1][j] || grid[i][j] == grid[2][j] || grid[i][j] == grid[3][j] || grid[i][j] == grid[5][j] || grid[i][j] == grid[6][j] || grid[i][j] == grid[7][j] || grid[i][j] == grid[8][j])
+				column = column + 1;
+			else;
+		}
+		else if (i == 5) {
+			if (grid[i][j] == grid[0][j] || grid[i][j] == grid[1][j] || grid[i][j] == grid[2][j] || grid[i][j] == grid[3][j] || grid[i][j] == grid[4][j] || grid[i][j] == grid[6][j] || grid[i][j] == grid[7][j] || grid[i][j] == grid[8][j])
+				column = column + 1;
+			else;
+		}
+		else if (i == 6) {
+			if (grid[i][j] == grid[0][j] || grid[i][j] == grid[1][j] || grid[i][j] == grid[2][j] || grid[i][j] == grid[3][j] || grid[i][j] == grid[4][j] || grid[i][j] == grid[5][j] || grid[i][j] == grid[7][j] || grid[i][j] == grid[8][j])
+				column = column + 1;
+			else;
+		}
+		else if (i == 7) {
+			if (grid[i][j] == grid[0][j] || grid[i][j] == grid[1][j] || grid[i][j] == grid[2][j] || grid[i][j] == grid[3][j] || grid[i][j] == grid[4][j] || grid[i][j] == grid[5][j] || grid[i][j] == grid[6][j] || grid[i][j] == grid[8][j])
+				column = column + 1;
+			else;
+		}
+		else if (i == 8) {
+			if (grid[i][j] == grid[0][j] || grid[i][j] == grid[1][j] || grid[i][j] == grid[2][j] || grid[i][j] == grid[3][j] || grid[i][j] == grid[4][j] || grid[i][j] == grid[5][j] || grid[i][j] == grid[6][j] || grid[i][j] == grid[7][j])
+				column = column + 1;
+			else;
+		}
+		else;
+		
+		if (j == 0) {
+			if (grid[i][j] == grid[i][1] || grid[i][j] == grid[i][2] || grid[i][j] == grid[i][3] || grid[i][j] == grid[i][4] || grid[i][j] == grid[i][5] || grid[i][j] == grid[i][6] || grid[i][j] == grid[i][7] || grid[i][j] == grid[i][8])
+				row = row + 1;
+			else;
+		}
+		else if (j == 1) {
+			if (grid[i][j] == grid[i][0] || grid[i][j] == grid[i][2] || grid[i][j] == grid[i][3] || grid[i][j] == grid[i][4] || grid[i][j] == grid[i][5] || grid[i][j] == grid[i][6] || grid[i][j] == grid[i][7] || grid[i][j] == grid[i][8])
+				row = row + 1;
+			else;
+		}
+		else if (j == 2) {
+			if (grid[i][j] == grid[i][0] || grid[i][j] == grid[i][1] || grid[i][j] == grid[i][3] || grid[i][j] == grid[i][4] || grid[i][j] == grid[i][5] || grid[i][j] == grid[i][6] || grid[i][j] == grid[i][7] || grid[i][j] == grid[i][8])
+				row = row + 1;
+			else;
+		}
+		else if (j == 3) {
+			if (grid[i][j] == grid[i][0] || grid[i][j] == grid[i][1] || grid[i][j] == grid[i][2] || grid[i][j] == grid[i][4] || grid[i][j] == grid[i][5] || grid[i][j] == grid[i][6] || grid[i][j] == grid[i][7] || grid[i][j] == grid[i][8])
+				row = row + 1;
+			else;
+		}
+		else if (j == 4) {
+			if (grid[i][j] == grid[i][0] || grid[i][j] == grid[i][1] || grid[i][j] == grid[i][2] || grid[i][j] == grid[i][3] || grid[i][j] == grid[i][5] || grid[i][j] == grid[i][6] || grid[i][j] == grid[i][7] || grid[i][j] == grid[i][8])
+				row = row + 1;
+			else;
+		}
+		else if (j == 5) {
+			if (grid[i][j] == grid[i][0] || grid[i][j] == grid[i][1] || grid[i][j] == grid[i][2] || grid[i][j] == grid[i][3] || grid[i][j] == grid[i][4] || grid[i][j] == grid[i][6] || grid[i][j] == grid[i][7] || grid[i][j] == grid[i][8])
+				row = row + 1;
+			else;
+		}
+		else if (j == 6) {
+			if (grid[i][j] == grid[i][0] || grid[i][j] == grid[i][1] || grid[i][j] == grid[i][2] || grid[i][j] == grid[i][3] || grid[i][j] == grid[i][4] || grid[i][j] == grid[i][5] || grid[i][j] == grid[i][7] || grid[i][j] == grid[i][8])
+				row = row + 1;
+			else;
+		}
+		else if (j == 7) {
+			if (grid[i][j] == grid[i][0] || grid[i][j] == grid[i][1] || grid[i][j] == grid[i][2] || grid[i][j] == grid[i][3] || grid[i][j] == grid[i][4] || grid[i][j] == grid[i][5] || grid[i][j] == grid[i][6] || grid[i][j] == grid[i][8])
+				row = row + 1;
+			else;
+		}
+		else if (j == 8) {
+			if (grid[i][j] == grid[i][0] || grid[i][j] == grid[i][1] || grid[i][j] == grid[i][2] || grid[i][j] == grid[i][3] || grid[i][j] == grid[i][4] || grid[i][j] == grid[i][5] || grid[i][j] == grid[i][6] || grid[i][j] == grid[i][7])
+				row = row + 1;
+			else;
+		}
+		else;
+		
+		int addi = 0, addj = 0;
+		
+		if (i <= 2) {			// Program used to determine how to tweak checking function
+			addi = 0;
+			if (j <= 2)			// BOX 1
+				addj = 0;
+			else if (j <= 5)	// BOX 2
+				addj = 3;
+			else if (j <= 8)	// BOX 3
+				addj = 6;
+			else;
+		}
+		else if (i <= 5) {
+			addi = 3;
+			if (j <= 2)			// BOX 4
+				addj = 0;
+			else if (j <= 5)	// BOX 5
+				addj = 3;
+			else if (j <= 8)	// BOX 6
+				addj = 6;
+			else;
+		}
+		else if (i <= 8) {
+			addi = 6;
+			if (j <= 2)			// BOX 7
+				addj = 0;
+			else if (j <= 5)	// BOX 8
+				addj = 3;
+			else if (j <= 8)	// BOX 9
+				addj = 6;
+			else;
+		}
+		else;
+		
+		if (i == (addi + 0) && j == (addj + 0)) {
+			if (grid[i][j] == grid[(addi + 0)][(addj + 1)] || grid[i][j] == grid[(addi + 0)][(addj + 2)] || grid[i][j] == grid[(addi + 1)][(addj + 0)] || grid[i][j] == grid[(addi + 1)][(addj + 1)] || grid[i][j] == grid[(addi + 1)][(addj + 2)] || grid[i][j] == grid[(addi + 2)][(addj + 0)] || grid[i][j] == grid[(addi + 2)][(addj + 1)] || grid[i][j] == grid[(addi + 2)][(addj + 2)]) 
+				box = box + 1;
+			else;
+		}
+		else if (i == (addi + 0) && j == (addj + 1)) {
+			if (grid[i][j] == grid[(addi + 0)][(addj + 0)] || grid[i][j] == grid[(addi + 0)][(addj + 2)] || grid[i][j] == grid[(addi + 1)][(addj + 0)] || grid[i][j] == grid[(addi + 1)][(addj + 1)] || grid[i][j] == grid[(addi + 1)][(addj + 2)] || grid[i][j] == grid[(addi + 2)][(addj + 0)] || grid[i][j] == grid[(addi + 2)][(addj + 1)] || grid[i][j] == grid[(addi + 2)][(addj + 2)]) 
+				box = box + 1;
+			else;
+		}
+		else if (i == (addi + 0) && j == (addj + 2)) {
+			if (grid[i][j] == grid[(addi + 0)][(addj + 0)] || grid[i][j] == grid[(addi + 0)][(addj + 1)] || grid[i][j] == grid[(addi + 1)][(addj + 0)] || grid[i][j] == grid[(addi + 1)][(addj + 1)] || grid[i][j] == grid[(addi + 1)][(addj + 2)] || grid[i][j] == grid[(addi + 2)][(addj + 0)] || grid[i][j] == grid[(addi + 2)][(addj + 1)] || grid[i][j] == grid[(addi + 2)][(addj + 2)]) 
+				box = box + 1;
+			else;
+		}
+		else if (i == (addi + 1) && j == (addj + 0)) {
+			if (grid[i][j] == grid[(addi + 0)][(addj + 0)] || grid[i][j] == grid[(addi + 0)][(addj + 1)] || grid[i][j] == grid[(addi + 0)][(addj + 2)] || grid[i][j] == grid[(addi + 1)][(addj + 1)] || grid[i][j] == grid[(addi + 1)][(addj + 2)] || grid[i][j] == grid[(addi + 2)][(addj + 0)] || grid[i][j] == grid[(addi + 2)][(addj + 1)] || grid[i][j] == grid[(addi + 2)][(addj + 2)]) 
+				box = box + 1;
+			else;
+		}
+		else if (i == (addi + 1) && j == (addj + 1)) {
+			if (grid[i][j] == grid[(addi + 0)][(addj + 0)] || grid[i][j] == grid[(addi + 0)][(addj + 1)] || grid[i][j] == grid[(addi + 0)][(addj + 2)] || grid[i][j] == grid[(addi + 1)][(addj + 0)] || grid[i][j] == grid[(addi + 1)][(addj + 2)] || grid[i][j] == grid[(addi + 2)][(addj + 0)] || grid[i][j] == grid[(addi + 2)][(addj + 1)] || grid[i][j] == grid[(addi + 2)][(addj + 2)]) 
+				box = box + 1;
+			else;
+		}
+		else if (i == (addi + 1) && j == (addj + 2)) {
+			if (grid[i][j] == grid[(addi + 0)][(addj + 0)] || grid[i][j] == grid[(addi + 0)][(addj + 1)] || grid[i][j] == grid[(addi + 0)][(addj + 2)] || grid[i][j] == grid[(addi + 1)][(addj + 0)] || grid[i][j] == grid[(addi + 1)][(addj + 1)] || grid[i][j] == grid[(addi + 2)][(addj + 0)] || grid[i][j] == grid[(addi + 2)][(addj + 1)] || grid[i][j] == grid[(addi + 2)][(addj + 2)]) 
+				box = box + 1;
+			else;
+		}
+		else if (i == (addi + 2) && j == (addj + 0)) {
+			if (grid[i][j] == grid[(addi + 0)][(addj + 0)] || grid[i][j] == grid[(addi + 0)][(addj + 1)] || grid[i][j] == grid[(addi + 0)][(addj + 2)] || grid[i][j] == grid[(addi + 1)][(addj + 0)] || grid[i][j] == grid[(addi + 1)][(addj + 1)] || grid[i][j] == grid[(addi + 1)][(addj + 2)] || grid[i][j] == grid[(addi + 2)][(addj + 1)] || grid[i][j] == grid[(addi + 2)][(addj + 2)]) 
+				box = box + 1;
+			else;
+		}
+		else if (i == (addi + 2) && j == (addj + 1)) {
+			if (grid[i][j] == grid[(addi + 0)][(addj + 0)] || grid[i][j] == grid[(addi + 0)][(addj + 1)] || grid[i][j] == grid[(addi + 0)][(addj + 2)] || grid[i][j] == grid[(addi + 1)][(addj + 0)] || grid[i][j] == grid[(addi + 1)][(addj + 1)] || grid[i][j] == grid[(addi + 1)][(addj + 2)] || grid[i][j] == grid[(addi + 2)][(addj + 0)] || grid[i][j] == grid[(addi + 2)][(addj + 2)]) 
+				box = box + 1;
+			else;
+		}
+		else if (i == (addi + 2) && j == (addj + 2)) {
+			if (grid[i][j] == grid[(addi + 0)][(addj + 0)] || grid[i][j] == grid[(addi + 0)][(addj + 1)] || grid[i][j] == grid[(addi + 0)][(addj + 2)] || grid[i][j] == grid[(addi + 1)][(addj + 0)] || grid[i][j] == grid[(addi + 1)][(addj + 1)] || grid[i][j] == grid[(addi + 1)][(addj + 2)] || grid[i][j] == grid[(addi + 2)][(addj + 0)] || grid[i][j] == grid[(addi + 2)][(addj + 1)]) 
+				box = box + 1;
+			else;
+		}
+		else;
+		
+		if (row == 0 && column == 0 && box == 0)
+			return 1;
+		else
+			return 0;
+	}
 }
 
 int t2i(const char *s) {
