@@ -284,7 +284,7 @@ int sudoku(int grid[9][9], int *p)
 int isValid (int grid[9][9], int i, int j) {		//returns 1 if valid and 0 if not (Most likely fully functional)
 	
 	int row = 0, column = 0, box = 0;
-	if (j > 8 || i > 8)
+	if (j > 8 || i > 8 || j < 0 || i < 0)
 		return 0;
 	else {
 		if (i == 0){
